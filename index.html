@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0F131C" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Staro Rīga 2026 — Interaktīvā karte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* Material 3 Dark Theme Tokens (Night Light Festival Tonal Palette) */
+    :root {
+      --md-sys-color-primary: #ADC6FF;
+      --md-sys-color-on-primary: #002E69;
+      --md-sys-color-primary-container: #1B438F;
+      --md-sys-color-on-primary-container: #D8E2FF;
+
+      --md-sys-color-secondary: #BFC6DC;
+      --md-sys-color-on-secondary: #293041;
+      --md-sys-color-secondary-container: #3F4759;
+      --md-sys-color-on-secondary-container: #DBE2F9;
+
+      --md-sys-color-tertiary: #F3B3E3;
+      --md-sys-color-on-tertiary: #4D1F46;
+      --md-sys-color-tertiary-container: #66355E;
+      --md-sys-color-on-tertiary-container: #FFD7F2;
+
+      --md-sys-color-surface: #111318;
+      --md-sys-color-on-surface: #E2E2E9;
+      --md-sys-color-surface-variant: #44474F;
+      --md-sys-color-on-surface-variant: #C4C6D0;
+
+      --md-sys-color-surface-container-lowest: #0C0E13;
+      --md-sys-color-surface-container-low: #191C20;
+      --md-sys-color-surface-container: #1D2024;
+      --md-sys-color-surface-container-high: #282A2F;
+      --md-sys-color-surface-container-highest: #33353A;
+
+      --md-sys-color-outline: #8E9099;
+      --md-sys-color-outline-variant: #44474F;
+
+      --md-sys-shape-corner-small: 8px;
+      --md-sys-shape-corner-medium: 12px;
+      --md-sys-shape-corner-large: 16px;
+      --md-sys-shape-corner-extra-large: 28px;
+      --md-sys-shape-corner-full: 9999px;
+
+      --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0.0, 0.0, 1.0);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      background-color: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .app-scaffold {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      background-color: var(--md-sys-color-surface);
+      position: relative;
+    }
+
+    /* Material 3 Top App Bar */
+    .top-app-bar {
+      background-color: var(--md-sys-color-surface-container);
+      padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 20;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .top-bar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 40px;
+      gap: 8px;
+    }
+
+    .title-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .app-title {
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 26px;
+      color: var(--md-sys-color-on-surface);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background-color: var(--md-sys-color-tertiary-container);
+      color: var(--md-sys-color-on-tertiary-container);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: var(--md-sys-shape-corner-full);
+      letter-spacing: 0.4px;
+      flex-shrink: 0;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--md-sys-color-tertiary);
+      animation: pulseDot 2s infinite;
+    }
+
+    .app-subtitle {
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface-variant);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Visited Progress Pill (M3 Assist/Status Chip) */
+    .visited-counter {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: var(--md-sys-shape-corner-full);
+      background-color: var(--md-sys-color-surface-container-high);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      color: var(--md-sys-color-primary);
+      font-size: 12px;
+      font-weight: 500;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    /* M3 Search Bar (48dp touch height) */
+    .m3-search-bar {
+      display: flex;
+      align-items: center;
+      background-color: var(--md-sys-color-surface-container-high);
+      border-radius: var(--md-sys-shape-corner-full);
+      height: 48px;
+      padding: 0 8px 0 16px;
+      gap: 10px;
+      transition: background-color 0.2s var(--md-sys-motion-easing-emphasized);
+    }
+
+    .m3-search-bar:focus-within {
+      background-color: var(--md-sys-color-surface-container-highest);
+      outline: 2px solid var(--md-sys-color-primary);
+    }
+
+    .m3-search-bar svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--md-sys-color-on-surface-variant);
+      flex-shrink: 0;
+    }
+
+    .m3-search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--md-sys-color-on-surface);
+      font-size: 16px; /* Prevents iOS/Android auto-zoom on focus */
+      font-family: inherit;
+      outline: none;
+      min-width: 0;
+    }
+
+    .m3-search-input::placeholder {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .clear-btn {
+      background: transparent;
+      border: none;
+      color: var(--md-sys-color-on-surface-variant);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .clear-btn.visible {
+      display: flex;
+    }
+
+    /* M3 Filter Chips Row (48dp touch target container, 36dp visual height) */
+    .filter-chips-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 0;
+      scrollbar-width: none;
+      scroll-behavior: smooth;
+    }
+
+    .filter-chips-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .m3-filter-chip {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--md-sys-shape-corner-small);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.1px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: 1px solid var(--md-sys-color-outline);
+      background-color: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      transition: all 0.2s var(--md-sys-motion-easing-emphasized);
+    }
+
+    .m3-filter-chip.selected {
+      background-color: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      border-color: transparent;
+    }
+
+    .chip-check {
+      display: none;
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .m3-filter-chip.selected .chip-check {
+      display: inline-block;
+    }
+
+    /* Main Content Area */
+    .main-view {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Interactive Map Viewport */
+    .map-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background-color: var(--md-sys-color-surface-container-lowest);
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .map-canvas {
+      width: 100%;
+      height: 100%;
+      transform-origin: center center;
+      transition: transform 0.28s var(--md-sys-motion-easing-emphasized);
+      will-change: transform;
+    }
+
+    .map-canvas.dragging {
+      transition: none;
+    }
+
+    svg#rigaMap {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pin-group {
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+
+    .pin-group.dimmed {
+      opacity: 0.2;
+    }
+
+    /* Expanded invisible 48dp touch hit area for Android thumbs */
+    .pin-hit-target {
+      fill: transparent;
+    }
+
+    .pin-pulse {
+      fill: var(--md-sys-color-primary);
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: center;
+      pointer-events: none;
+    }
+
+    .pin-group.active .pin-pulse {
+      animation: pinHalo 1.8s infinite ease-out;
+    }
+
+    .pin-circle {
+      fill: var(--md-sys-color-primary-container);
+      stroke: var(--md-sys-color-primary);
+      stroke-width: 2;
+      transition: all 0.2s ease;
+      pointer-events: none;
+    }
+
+    .pin-group.highlight-special .pin-circle {
+      fill: var(--md-sys-color-tertiary-container);
+      stroke: var(--md-sys-color-tertiary);
+    }
+
+    .pin-group.visited .pin-circle {
+      fill: #1A3A2E;
+      stroke: #7CD6A9;
+    }
+
+    .pin-group.active .pin-circle {
+      fill: var(--md-sys-color-primary);
+      stroke: #FFFFFF;
+      stroke-width: 2.5;
+      r: 14.5;
+    }
+
+    .pin-label {
+      fill: var(--md-sys-color-on-primary-container);
+      font-size: 10px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+    }
+
+    .pin-group.highlight-special .pin-label {
+      fill: var(--md-sys-color-on-tertiary-container);
+    }
+
+    .pin-group.visited .pin-label {
+      fill: #A7F3CE;
+    }
+
+    .pin-group.active .pin-label {
+      fill: var(--md-sys-color-on-primary);
+      font-size: 11px;
+    }
+
+    /* Map Floating Controls (M3 48dp Standard FABs for Android accessibility) */
+    .map-fab-stack {
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .m3-fab-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--md-sys-shape-corner-large);
+      background-color: var(--md-sys-color-surface-container-high);
+      color: var(--md-sys-color-primary);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+
+    .m3-fab-btn:active {
+      background-color: var(--md-sys-color-surface-container-highest);
+      transform: scale(0.94);
+    }
+
+    .m3-fab-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    /* Map Legend Pill */
+    .map-legend {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      z-index: 10;
+      background-color: rgba(29, 32, 36, 0.94);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: var(--md-sys-shape-corner-medium);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--md-sys-color-on-surface-variant);
+      pointer-events: none;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* List View */
+    .list-container {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px 120px 16px;
+      gap: 10px;
+      flex-direction: column;
+      overscroll-behavior: contain;
+    }
+
+    .list-container.active {
+      display: flex;
+    }
+
+    .m3-card {
+      background-color: var(--md-sys-color-surface-container);
+      border-radius: var(--md-sys-shape-corner-large);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      min-height: 72px;
+    }
+
+    .m3-card:active {
+      background-color: var(--md-sys-color-surface-container-high);
+    }
+
+    .m3-card.selected-card {
+      border-color: var(--md-sys-color-primary);
+      background-color: var(--md-sys-color-surface-container-high);
+    }
+
+    .card-badge {
+      min-width: 40px;
+      height: 40px;
+      border-radius: var(--md-sys-shape-corner-full);
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .card-badge.special {
+      background-color: var(--md-sys-color-tertiary-container);
+      color: var(--md-sys-color-on-tertiary-container);
+    }
+
+    .card-badge.visited {
+      background-color: #1A3A2E;
+      color: #A7F3CE;
+      border: 1px solid #7CD6A9;
+    }
+
+    .card-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+      line-height: 22px;
+    }
+
+    .card-address {
+      font-size: 13px;
+      color: var(--md-sys-color-primary);
+      margin-top: 2px;
+    }
+
+    .card-zone {
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface-variant);
+      margin-top: 3px;
+    }
+
+    .card-check-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--md-sys-color-outline);
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .card-check-btn.checked {
+      background-color: #1A3A2E;
+      border-color: #7CD6A9;
+      color: #A7F3CE;
+    }
+
+    /* M3 Bottom Sheet with Swipe-to-Dismiss Support */
+    .bottom-sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--md-sys-color-surface-container-high);
+      border-top-left-radius: var(--md-sys-shape-corner-extra-large);
+      border-top-right-radius: var(--md-sys-shape-corner-extra-large);
+      padding: 10px 20px 20px 20px;
+      box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.65);
+      z-index: 25;
+      transform: translateY(105%);
+      transition: transform 0.3s var(--md-sys-motion-easing-emphasized);
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+      touch-action: pan-y;
+    }
+
+    .bottom-sheet.dragging-sheet {
+      transition: none;
+    }
+
+    .bottom-sheet.open {
+      transform: translateY(0);
+    }
+
+    .sheet-drag-zone {
+      padding: 6px 0 12px 0;
+      cursor: grab;
+    }
+
+    .sheet-drag-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background-color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.45;
+      margin: 0 auto;
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .sheet-badges-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .sheet-number-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--md-sys-shape-corner-full);
+    }
+
+    .sheet-visited-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 26px;
+      padding: 0 10px;
+      border-radius: var(--md-sys-shape-corner-full);
+      border: 1px solid var(--md-sys-color-outline);
+      background-color: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .sheet-visited-toggle.checked {
+      background-color: #1A3A2E;
+      border-color: #7CD6A9;
+      color: #A7F3CE;
+    }
+
+    .sheet-title {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+      line-height: 26px;
+    }
+
+    .sheet-close-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background-color: var(--md-sys-color-surface-container-highest);
+      color: var(--md-sys-color-on-surface-variant);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .sheet-meta {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .meta-row svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--md-sys-color-primary);
+      flex-shrink: 0;
+    }
+
+    .sheet-desc {
+      margin-top: 10px;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--md-sys-color-on-surface);
+      background-color: var(--md-sys-color-surface-container);
+      padding: 10px 12px;
+      border-radius: var(--md-sys-shape-corner-medium);
+    }
+
+    /* M3 48dp Action Buttons Row (Prev / Google Maps / Next) */
+    .sheet-actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .m3-icon-tonal-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--md-sys-shape-corner-full);
+      background-color: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .m3-icon-tonal-btn:active, .m3-filled-btn:active {
+      transform: scale(0.96);
+    }
+
+    .m3-filled-btn {
+      flex: 1;
+      height: 48px;
+      border-radius: var(--md-sys-shape-corner-full);
+      background-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* Material 3 Bottom Navigation Bar */
+    .m3-nav-bar {
+      height: calc(72px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background-color: var(--md-sys-color-surface-container);
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 30;
+    }
+
+    .nav-destination {
+      flex: 1;
+      min-height: 56px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background: transparent;
+      border: none;
+      color: var(--md-sys-color-on-surface-variant);
+      cursor: pointer;
+      padding: 6px 0;
+    }
+
+    .nav-indicator {
+      width: 64px;
+      height: 32px;
+      border-radius: var(--md-sys-shape-corner-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s var(--md-sys-motion-easing-emphasized);
+    }
+
+    .nav-destination.active .nav-indicator {
+      background-color: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    .nav-destination.active .nav-label {
+      color: var(--md-sys-color-on-surface);
+      font-weight: 700;
+    }
+
+    .nav-indicator svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+
+    .nav-label {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+    }
+
+    /* M3 Snackbar for feedback */
+    .m3-snackbar {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 84px;
+      background-color: #E2E2E9;
+      color: #1A1C20;
+      padding: 12px 16px;
+      border-radius: var(--md-sys-shape-corner-small);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: all 0.22s var(--md-sys-motion-easing-emphasized);
+    }
+
+    .m3-snackbar.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    @keyframes pinHalo {
+      0% { opacity: 0.75; transform: scale(1); }
+      100% { opacity: 0; transform: scale(2.4); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-scaffold">
+    <!-- Material 3 Top App Bar -->
+    <header class="top-app-bar">
+      <div class="top-bar-header">
+        <div class="title-group">
+          <div class="app-title">
+            Staro Rīga 2026
+            <span class="live-badge"><span class="live-dot"></span>17:00–23:00</span>
+          </div>
+          <div class="app-subtitle">15.–18. novembris • 7 gaismas loki • ~5 km</div>
+        </div>
+        <button class="visited-counter" id="visitedCounterBtn" title="Apskatītie objekti">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          <span id="visitedCountText">0 / 41</span>
+        </button>
+      </div>
+
+      <!-- M3 Search Bar (48dp) -->
+      <div class="m3-search-bar">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input id="searchInput" class="m3-search-input" type="search" enterkeyhint="search" placeholder="Meklēt objektu vai ielu..." autocomplete="off" />
+        <button id="clearSearchBtn" class="clear-btn" aria-label="Notīrīt meklēšanu">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+
+      <!-- M3 Filter Chips -->
+      <div class="filter-chips-scroll" id="zoneChips"></div>
+    </header>
+
+    <!-- Main View -->
+    <main class="main-view">
+      <!-- Map View -->
+      <div class="map-container" id="mapView">
+        <div class="map-legend">
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#ADC6FF;"></span>
+            <span>Gaismas objekts</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#F3B3E3;"></span>
+            <span>Galvenais akcents</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#7CD6A9;"></span>
+            <span>Apskatīts</span>
+          </div>
+        </div>
+
+        <div class="map-fab-stack">
+          <button class="m3-fab-btn" id="zoomInBtn" aria-label="Tuvināt">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </button>
+          <button class="m3-fab-btn" id="zoomOutBtn" aria-label="Tālināt">
+            <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+          </button>
+          <button class="m3-fab-btn" id="resetViewBtn" aria-label="Centrēt karti">
+            <svg viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+          </button>
+        </div>
+
+        <div class="map-canvas" id="mapCanvas">
+          <svg id="rigaMap" viewBox="0 0 420 620" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="daugavaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#13233A" />
+                <stop offset="100%" stop-color="#0E1A2B" />
+              </linearGradient>
+            </defs>
+
+            <!-- District Background Areas -->
+            <path d="M 0,340 L 115,340 L 145,480 L 160,620 L 0,620 Z" fill="#151820" />
+            <rect x="175" y="30" width="120" height="105" rx="22" fill="#14221D" opacity="0.75" />
+            <rect x="180" y="150" width="125" height="95" rx="18" fill="#14221D" opacity="0.7" />
+            <rect x="305" y="235" width="90" height="80" rx="16" fill="#14221D" opacity="0.7" />
+            <path d="M 165,260 L 285,260 L 300,385 L 220,425 L 165,375 Z" fill="#1B1F29" stroke="#2D3342" stroke-width="1" />
+            <path d="M 215,445 L 335,445 L 355,565 L 235,565 Z" fill="#191D26" stroke="#2D3342" stroke-width="1" />
+
+            <!-- City Canal -->
+            <path d="M 160,210 Q 245,205 295,245 Q 320,300 295,380 Q 270,415 215,425" fill="none" stroke="#18324F" stroke-width="6" stroke-linecap="round" />
+
+            <!-- Daugava River -->
+            <path d="M 110,0 L 145,0 Q 155,190 165,330 Q 185,465 230,620 L 175,620 Q 135,470 118,335 Q 105,190 110,0 Z" fill="url(#daugavaGrad)" />
+
+            <!-- Bridges -->
+            <line x1="85" y1="245" x2="178" y2="255" stroke="#44474F" stroke-width="5" stroke-linecap="round" />
+            <text x="74" y="238" fill="#6F7687" font-size="9" font-weight="500">Vanšu tilts</text>
+            <line x1="115" y1="395" x2="195" y2="380" stroke="#44474F" stroke-width="6" stroke-linecap="round" />
+            <text x="68" y="388" fill="#6F7687" font-size="9" font-weight="500">Akmens tilts</text>
+            <line x1="138" y1="465" x2="218" y2="452" stroke="#363942" stroke-width="4" stroke-dasharray="4,2" />
+
+            <!-- Walking Route Connector Line (~5 km path) -->
+            <path d="M 112,485 L 122,425 L 195,380 L 265,515 L 250,400 L 235,345 L 335,280 L 245,310 L 220,210 L 235,85"
+                  fill="none" stroke="#ADC6FF" stroke-width="2" stroke-dasharray="5,5" opacity="0.38" />
+
+            <!-- District Labels -->
+            <text x="148" y="135" fill="#3B5B87" font-size="11" font-weight="700" transform="rotate(-84 148,135)" letter-spacing="3">DAUGAVA</text>
+            <text x="28" y="545" fill="#7D8494" font-size="11" font-weight="700" letter-spacing="1">PĀRDAUGAVA</text>
+            <text x="205" y="45" fill="#75A892" font-size="10" font-weight="700">VIESTURDĀRZS</text>
+            <text x="200" y="165" fill="#75A892" font-size="10" font-weight="700">KRONVALDA PARKS</text>
+            <text x="315" y="250" fill="#75A892" font-size="10" font-weight="700">ESPLANĀDE</text>
+            <text x="200" y="280" fill="#8E96A8" font-size="11" font-weight="700" letter-spacing="1">VECRĪGA</text>
+            <text x="275" y="552" fill="#8E96A8" font-size="10" font-weight="700" letter-spacing="1">SPĪĶERI</text>
+
+            <!-- Pins Container -->
+            <g id="pinsLayer"></g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div class="list-container" id="listView"></div>
+
+      <!-- M3 Bottom Sheet Detail Card -->
+      <div class="bottom-sheet" id="detailSheet" role="dialog" aria-labelledby="sheetTitle">
+        <div class="sheet-drag-zone" id="sheetDragZone">
+          <div class="sheet-drag-handle"></div>
+        </div>
+        <div class="sheet-header">
+          <div>
+            <div class="sheet-badges-row">
+              <div class="sheet-number-pill" id="sheetBadge">#19 • 4. zona</div>
+              <button class="sheet-visited-toggle" id="sheetVisitedBtn">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <span id="sheetVisitedText">Atzīmēt kā apskatītu</span>
+              </button>
+            </div>
+            <h2 class="sheet-title" id="sheetTitle">Dižkoku balsis</h2>
+          </div>
+          <button class="sheet-close-btn" id="closeSheetBtn" aria-label="Aizvērt">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+        <div class="sheet-meta">
+          <div class="meta-row">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+            <span id="sheetAddress">Brīvības pieminekļa laukums</span>
+          </div>
+          <div class="meta-row">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            <span id="sheetZone">4. Brīvības piemineklis & Esplanāde</span>
+          </div>
+        </div>
+        <p class="sheet-desc" id="sheetDesc">Pirmoreiz festivāla vēsturē — gaismas un skaņas stāsts pašā Brīvības pieminekļa laukumā.</p>
+        <div class="sheet-actions">
+          <button id="sheetPrevBtn" class="m3-icon-tonal-btn" aria-label="Iepriekšējais objekts">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+          </button>
+          <a id="sheetMapsLink" class="m3-filled-btn" href="#" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M21.71 11.29l-9-9a.996.996 0 0 0-1.41 0l-9 9a.996.996 0 0 0 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9a.996.996 0 0 0 0-1.41zM14 14.5V12h-4v3H8v-4c0-.55.45-1 1-1h5V7.5l3.5 3.5-3.5 3.5z"/></svg>
+            Navigācija (Maps)
+          </a>
+          <button id="sheetNextBtn" class="m3-icon-tonal-btn" aria-label="Nākamais objekts">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- M3 Snackbar -->
+      <div class="m3-snackbar" id="snackbar" role="status"></div>
+    </main>
+
+    <!-- Material 3 Bottom Navigation Bar -->
+    <nav class="m3-nav-bar" aria-label="Galvenā navigācija">
+      <button class="nav-destination active" data-tab="map">
+        <div class="nav-indicator">
+          <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        </div>
+        <span class="nav-label">Karte</span>
+      </button>
+      <button class="nav-destination" data-tab="list">
+        <div class="nav-indicator">
+          <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+        </div>
+        <span class="nav-label">Objektu saraksts</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    const ZONES = [
+      { id: 'all', label: 'Visi loki (7)', zoom: { scale: 1, x: 0, y: 0 } },
+      { id: 'z1', label: '1. Gaismas pils', zoom: { scale: 1.85, x: 145, y: -230 } },
+      { id: 'z2', label: '2. Spīķeri', zoom: { scale: 1.85, x: -95, y: -270 } },
+      { id: 'z3', label: '3. Vecrīga (1. loks)', zoom: { scale: 1.9, x: -35, y: -75 } },
+      { id: 'z4', label: '4. Brīvības piemineklis', zoom: { scale: 1.95, x: -185, y: 20 } },
+      { id: 'z5', label: '5. Vecrīga (2. loks)', zoom: { scale: 1.95, x: 10, y: 15 } },
+      { id: 'z6', label: '6. Kronvalda parks', zoom: { scale: 1.85, x: -35, y: 155 } },
+      { id: 'z7', label: '7. Viesturdārzs', zoom: { scale: 1.95, x: -35, y: 295 } }
+    ];
+
+    const INSTALLATIONS = [
+      // Zone 1: Gaismas pils & Mūkusalas promenāde
+      { id: 1, num: '1', title: 'Ascend', address: 'Mūkusalas iela 3 (LNB fasāde)', lat: 56.9412, lng: 24.0964, zoneId: 'z1', zoneName: '1. Gaismas pils & Mūkusalas promenāde', special: true, x: 106, y: 425, desc: 'Ungāru mākslinieka L. Ž. Bordoša iespaidīga 3D videoprojekcija uz Latvijas Nacionālās bibliotēkas fasādes.' },
+      { id: 2, num: '2', title: 'Šaubu svārsts', address: 'Mūkusalas promenāde (pie Akmens tilta)', lat: 56.9425, lng: 24.0985, zoneId: 'z1', zoneName: '1. Gaismas pils & Mūkusalas promenāde', special: false, x: 112, y: 452, desc: 'Kinētiska gaismas instalācija par līdzsvaru un izvēles mirkli.' },
+      { id: 3, num: '3', title: 'Gaismas kurss', address: 'Mūkusalas promenāde', lat: 56.9398, lng: 24.0992, zoneId: 'z1', zoneName: '1. Gaismas pils & Mūkusalas promenāde', special: false, x: 118, y: 478, desc: 'Virzienrādītājs gar Daugavas kreiso krastu ar ritmisku gaismas plūsmu.' },
+      { id: 4, num: '4', title: 'Miera osta', address: 'Mūkusalas promenāde', lat: 56.9385, lng: 24.1005, zoneId: 'z1', zoneName: '1. Gaismas pils & Mūkusalas promenāde', special: false, x: 125, y: 504, desc: 'Meditatīva gaismas un skaņas telpa pie ūdens.' },
+      { id: 5, num: '5', title: 'Klātbūtne', address: 'Mūkusalas promenāde', lat: 56.9372, lng: 24.1018, zoneId: 'z1', zoneName: '1. Gaismas pils & Mūkusalas promenāde', special: false, x: 132, y: 530, desc: 'Interaktīvs vides objekts, kas reaģē uz skatītāju klātbūtni.' },
+
+      // Zone 2: Spīķeri
+      { id: 6, num: '6', title: 'Dievišķā ģeometrija', address: 'Starp Lastādijas ielu 14 un 12, k-3', lat: 56.9426, lng: 24.1162, zoneId: 'z2', zoneName: '2. Spīķeru gaismas loks', special: false, x: 255, y: 472, desc: 'Gaismas staru ģeometriskās struktūras starp vēsturiskajām Spīķeru noliktavām.' },
+      { id: 7, num: '7', title: 'Senās balsis', address: 'Spīķeru laukums', lat: 56.9421, lng: 24.1155, zoneId: 'z2', zoneName: '2. Spīķeru gaismas loks', special: true, x: 278, y: 495, desc: 'Audiovizuāla instalācija Spīķeru centrālajā laukumā.' },
+      { id: 8, num: '8', title: 'Pārvērt pikseļos!', address: 'Pie Lastādijas ielas 8, k-1', lat: 56.9431, lng: 24.1148, zoneId: 'z2', zoneName: '2. Spīķeru gaismas loks', special: false, x: 250, y: 518, desc: 'Interaktīva spēle, kurā apmeklētāju kustības pārtop digitālos pikseļos.' },
+      { id: 9, num: '9', title: 'Atkal', address: 'Lastādijas iela 4', lat: 56.9436, lng: 24.1139, zoneId: 'z2', zoneName: '2. Spīķeru gaismas loks', special: false, x: 292, y: 525, desc: 'Gaismas stāsts par atkārtošanos un jaunu sākumu.' },
+
+      // Zone 3: Pirmais Vecrīgas gaismas loks
+      { id: 10, num: '10', title: 'Sirds mīlestības pilna pasaule', address: '13. janvāra iela 29', lat: 56.9458, lng: 24.1128, zoneId: 'z3', zoneName: '3. Pirmais Vecrīgas gaismas loks', special: false, x: 268, y: 392, desc: 'Silts gaismas akcents Vecrīgas dienvidu vārtos.' },
+      { id: 11, num: '11', title: 'Gaismas lokos Vecrīgas logos', address: 'Kungu iela 33', lat: 56.9455, lng: 24.1088, zoneId: 'z3', zoneName: '3. Pirmais Vecrīgas gaismas loks', special: false, x: 222, y: 382, desc: 'Dzīvojamās ēkas logu pārvērtības vienotā gaismas horeogrāfijā.' },
+      { id: 12, num: '12', title: 'Human', address: 'Peitavas iela 9/11', lat: 56.9462, lng: 24.1102, zoneId: 'z3', zoneName: '3. Pirmais Vecrīgas gaismas loks', special: false, x: 245, y: 375, desc: 'Cilvēka silueta un emociju gaismas studija šaurajā Vecrīgas ieliņā.' },
+      { id: 13, num: '13', title: 'Interlude', address: 'Reformātu baznīca, Mārstaļu iela 10', lat: 56.9464, lng: 24.1112, zoneId: 'z3', zoneName: '3. Pirmais Vecrīgas gaismas loks', special: false, x: 256, y: 360, desc: 'Arhitektonisks gaismas un mūzikas starpbrīdis pie Reformātu baznīcas.' },
+      { id: 14, num: '14', title: 'No saullēkta līdz saulrietam', address: 'Grēcinieku iela 10', lat: 56.9467, lng: 24.1072, zoneId: 'z3', zoneName: '3. Pirmais Vecrīgas gaismas loks', special: false, x: 205, y: 365, desc: 'Diennakts gaismas cikla interpretācija pilsētvidē.' },
+      { id: 15, num: '15', title: 'Mīlestība: Zaļš', address: 'Pēterbaznīcas iela', lat: 56.9475, lng: 24.1095, zoneId: 'z3', zoneName: '3. Pirmais Vecrīgas gaismas loks', special: false, x: 235, y: 348, desc: 'Dabas un zaļās gaismas sintēze pie Sv. Pētera baznīcas.' },
+      { id: 16, num: '16', title: 'Mīlestības manifests', address: 'Melngalvju nams, Rātslaukums 7', lat: 56.9472, lng: 24.1068, zoneId: 'z3', zoneName: '3. Pirmais Vecrīgas gaismas loks', special: true, x: 192, y: 348, desc: 'Krāšņa fasādes projekcija uz vienas no Rīgas slavenākajām ēkām Rātslaukumā.' },
+      { id: 17, num: '17', title: 'Es ceļoju laikā', address: 'Krāmu iela 2 / Tirgoņu iela 11/17', lat: 56.9483, lng: 24.1078, zoneId: 'z3', zoneName: '3. Pirmais Vecrīgas gaismas loks', special: false, x: 215, y: 332, desc: 'Vēsturisku laikmetu saspēle uz Vecrīgas namu sienām.' },
+      { id: 18, num: '18', title: 'Mana Latvija', address: 'Līvu laukums', lat: 56.9495, lng: 24.1098, zoneId: 'z3', zoneName: '3. Pirmais Vecrīgas gaismas loks', special: false, x: 255, y: 325, desc: 'Valsts svētku noskaņas gaismas instalācija Līvu laukumā.' },
+
+      // Zone 4: Brīvības piemineklis & Esplanāde
+      { id: 19, num: '19', title: 'Dižkoku balsis', address: 'Brīvības pieminekļa laukums', lat: 56.9515, lng: 24.1133, zoneId: 'z4', zoneName: '4. Brīvības piemineklis & Esplanāde', special: true, x: 308, y: 305, desc: 'Pirmoreiz festivāla vēsturē — gaismas un skaņas stāsts pašā Brīvības pieminekļa laukumā.' },
+      { id: 20, num: '20', title: 'Staro fonogrāfs', address: 'Esplanāde (pie Raiņa pieminekļa)', lat: 56.9542, lng: 24.1155, zoneId: 'z4', zoneName: '4. Brīvības piemineklis & Esplanāde', special: false, x: 338, y: 278, desc: 'Interaktīva skaņas un gaismas iekārta Esplanādes parkā.' },
+      { id: 21, num: '21', title: 'Elpa', address: 'Esplanāde (centrālā aleja)', lat: 56.9535, lng: 24.1172, zoneId: 'z4', zoneName: '4. Brīvības piemineklis & Esplanāde', special: false, x: 362, y: 295, desc: 'Gaismas instalācija, kas pulsē lēnā, mierīgā elpas ritmā.' },
+
+      // Zone 5: Otrais Vecrīgas gaismas loks
+      { id: 22, num: '22', title: 'Tas pats cits', address: 'Torņa iela (pie Kara muzeja)', lat: 56.9512, lng: 24.1082, zoneId: 'z5', zoneName: '5. Otrais Vecrīgas gaismas loks', special: false, x: 245, y: 288, desc: 'Gaismas instalācija gar vēsturiskajām Jēkaba kazarmām.' },
+      { id: 23, num: '23', title: 'Gaismas arfa', address: 'Mazā Pils iela 19 ("Trīs brāļi")', lat: 56.9504, lng: 24.1044, zoneId: 'z5', zoneName: '5. Otrais Vecrīgas gaismas loks', special: false, x: 205, y: 292, desc: 'Lāzeru stīgas, kuras iespējams "spēlēt" ar roku kustībām pie Trīs brāļiem.' },
+      { id: 24, num: '24', title: 'Doma gaismas ātrumā', address: 'Doma laukums', lat: 56.9491, lng: 24.1046, zoneId: 'z5', zoneName: '5. Otrais Vecrīgas gaismas loks', special: true, x: 192, y: 315, desc: 'Dinamiska gaismas izrāde Doma laukumā.' },
+      { id: 25, num: '25', title: 'Pirms 100 gadiem', address: 'Doma laukums 4', lat: 56.9493, lng: 24.1055, zoneId: 'z5', zoneName: '5. Otrais Vecrīgas gaismas loks', special: false, x: 218, y: 312, desc: 'Vēsturisku fotogrāfiju un gaismas atmiņu projekcija.' },
+      { id: 26, num: '26', title: '(NE)atgriešanās punkts', address: 'Pils laukums (pie Rīgas pils torņa)', lat: 56.9508, lng: 24.1018, zoneId: 'z5', zoneName: '5. Otrais Vecrīgas gaismas loks', special: false, x: 176, y: 302, desc: 'Monumentāls gaismas akcents pie Rīgas pils.' },
+
+      // Zone 6: Neatkarības laukums, "Ave Sol" & Kronvalda parks
+      { id: 27, num: '27', title: 'Bebru būvlaukums', address: 'Neatkarības laukums', lat: 56.9528, lng: 24.1032, zoneId: 'z6', zoneName: '6. Ave Sol & Kronvalda parks', special: false, x: 192, y: 245, desc: 'Humoristisks un ģimenēm draudzīgs gaismas objekts pie kanāla.' },
+      { id: 28, num: '28', title: 'Bērni zīmē Latviju', address: 'Koncertzāle "Ave Sol", Citadeles iela 7', lat: 56.9542, lng: 24.1035, zoneId: 'z6', zoneName: '6. Ave Sol & Kronvalda parks', special: false, x: 195, y: 215, desc: 'Latvijas bērnu zīmējumu animēta gaismas projekcija uz "Ave Sol" fasādes.' },
+      { id: 29, num: '29', title: 'Starpstāvoklis', address: 'Kronvalda bulv. / Citadeles ielas stūris', lat: 56.9540, lng: 24.1052, zoneId: 'z6', zoneName: '6. Ave Sol & Kronvalda parks', special: false, x: 218, y: 225, desc: 'Gaismas telpa starp gaismu un ēnu.' },
+      { id: 30, num: '30', title: 'Pacelšanās', address: 'Citadeles iela 6A', lat: 56.9551, lng: 24.1042, zoneId: 'z6', zoneName: '6. Ave Sol & Kronvalda parks', special: false, x: 212, y: 192, desc: 'Vertikāla gaismas instalācija ar augšupejošu dinamiku.' },
+      { id: 31, num: '31', title: 'Pēc Tevis, pēc manis', address: 'Elizabetes ielas / Kronvalda bulv. stūris', lat: 56.9545, lng: 24.1082, zoneId: 'z6', zoneName: '6. Ave Sol & Kronvalda parks', special: false, x: 252, y: 222, desc: 'Dialoga instalācija diviem gaismas avotiem.' },
+      { id: 32, num: '32', title: 'Inter tempora', address: 'Rīgas Kongresu nama fasāde', lat: 56.9552, lng: 24.1095, zoneId: 'z6', zoneName: '6. Ave Sol & Kronvalda parks', special: true, x: 278, y: 215, desc: 'Lielformāta audiovizuāls uzvedums uz Rīgas Kongresu nama fasādes.' },
+      { id: 33, num: '33', title: 'Zīmols', address: 'Pilsētas kanāls pie Kongresu nama', lat: 56.9558, lng: 24.1088, zoneId: 'z6', zoneName: '6. Ave Sol & Kronvalda parks', special: false, x: 268, y: 192, desc: 'Atspulgu spēle Pilsētas kanāla ūdenī.' },
+      { id: 34, num: '34', title: 'Spektrs & Revitalizācija', address: 'Kronvalda parks', lat: 56.9565, lng: 24.1065, zoneId: 'z6', zoneName: '6. Ave Sol & Kronvalda parks', special: false, x: 242, y: 175, desc: 'Krāsu spektra gaismas ceļš starp Kronvalda parka kokiem.' },
+      { id: 35, num: '35', title: 'LMA un LKA studentu darbi', address: 'Simtgades aleja, Citadeles un Ausekļa iela', lat: 56.9574, lng: 24.1052, zoneId: 'z6', zoneName: '6. Ave Sol & Kronvalda parks', special: false, x: 222, y: 158, desc: 'Jauno mākslinieku eksperimentālo gaismas objektu galerija brīvdabā.' },
+
+      // Zone 7: Viesturdārzs
+      { id: 37, num: '37', title: 'Gaismas vārti', address: 'Viesturdārza triumfa arka', lat: 56.9605, lng: 24.1038, zoneId: 'z7', zoneName: '7. Viesturdārza gaismas loks', special: false, x: 225, y: 122, desc: 'Svinīgi izgaismotā Viesturdārza vēsturiskā arka sagaida parka apmeklētājus.' },
+      { id: 38, num: '38', title: 'Gaismas gredzeni', address: 'Viesturdārzs', lat: 56.9612, lng: 24.1028, zoneId: 'z7', zoneName: '7. Viesturdārza gaismas loks', special: false, x: 205, y: 102, desc: 'Mirdzošu gaismas apļu tunelis parka pastaigu celiņā.' },
+      { id: 39, num: '39', title: 'Elpojošie koki', address: 'Viesturdārzs', lat: 56.9614, lng: 24.1048, zoneId: 'z7', zoneName: '7. Viesturdārza gaismas loks', special: false, x: 255, y: 105, desc: 'Viesturdārza dižkoki, kas iemirdzas dzīvā gaismas ritmā.' },
+      { id: 40, num: '40', title: 'Interaktīvās šūpoles', address: 'Viesturdārzs', lat: 56.9622, lng: 24.1025, zoneId: 'z7', zoneName: '7. Viesturdārza gaismas loks', special: false, x: 202, y: 78, desc: 'Šūpojoties mainās gaismas krāsa un skan harmoniskas melodijas.' },
+      { id: 41, num: '41', title: 'Kinētiskie tauriņi', address: 'Viesturdārzs', lat: 56.9624, lng: 24.1052, zoneId: 'z7', zoneName: '7. Viesturdārza gaismas loks', special: false, x: 262, y: 80, desc: 'Kustīgi, mirdzoši gaismas tauriņi parka krūmos un zaros.' },
+      { id: 42, num: '42', title: 'Saule naktī / Soleil Nuit', address: 'Viesturdārza centrālais laukums', lat: 56.9631, lng: 24.1039, zoneId: 'z7', zoneName: '7. Viesturdārza gaismas loks', special: true, x: 232, y: 65, desc: 'Franču mākslinieka Sebastjēna Lefēvra kinētiskā skulptūra ar vairāk nekā 5000 spoguļelementiem.' }
+    ];
+
+    // Persistent State (LocalStorage for Android offline walk progress)
+    let visitedIds = new Set(JSON.parse(localStorage.getItem('staro_2026_visited') || '[]'));
+    let selectedZone = 'all';
+    let searchQuery = '';
+    let activeItemId = 19;
+
+    // Pan & Pinch-to-Zoom State
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let initialPinchDist = null;
+    let initialPinchScale = 1;
+
+    // DOM Elements
+    const zoneChipsContainer = document.getElementById('zoneChips');
+    const pinsLayer = document.getElementById('pinsLayer');
+    const listView = document.getElementById('listView');
+    const mapView = document.getElementById('mapView');
+    const mapCanvas = document.getElementById('mapCanvas');
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const detailSheet = document.getElementById('detailSheet');
+    const snackbar = document.getElementById('snackbar');
+
+    function triggerHaptic(ms = 12) {
+      if (navigator.vibrate) {
+        navigator.vibrate(ms);
+      }
+    }
+
+    let snackbarTimeout;
+    function showSnackbar(msg) {
+      snackbar.textContent = msg;
+      snackbar.classList.add('show');
+      clearTimeout(snackbarTimeout);
+      snackbarTimeout = setTimeout(() => snackbar.classList.remove('show'), 2200);
+    }
+
+    function updateVisitedCounter() {
+      document.getElementById('visitedCountText').textContent = `${visitedIds.size} / ${INSTALLATIONS.length}`;
+    }
+
+    function toggleVisited(id) {
+      triggerHaptic(18);
+      if (visitedIds.has(id)) {
+        visitedIds.delete(id);
+        showSnackbar('Noņemts no apskatītajiem');
+      } else {
+        visitedIds.add(id);
+        showSnackbar('Atzīmēts kā apskatīts ✓');
+      }
+      localStorage.setItem('staro_2026_visited', JSON.stringify([...visitedIds]));
+      updateVisitedCounter();
+      syncSheetVisitedButton(id);
+      updateFilteredViews();
+    }
+
+    function syncSheetVisitedButton(id) {
+      const btn = document.getElementById('sheetVisitedBtn');
+      const txt = document.getElementById('sheetVisitedText');
+      const isVis = visitedIds.has(id);
+      btn.classList.toggle('checked', isVis);
+      txt.textContent = isVis ? 'Apskatīts ✓' : 'Atzīmēt kā apskatītu';
+    }
+
+    // Render Filter Chips with Auto-Zoom to Zone
+    function renderChips() {
+      zoneChipsContainer.innerHTML = '';
+      ZONES.forEach(zone => {
+        const btn = document.createElement('button');
+        btn.className = `m3-filter-chip ${selectedZone === zone.id ? 'selected' : ''}`;
+        btn.innerHTML = `
+          <svg class="chip-check" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          <span>${zone.label}</span>
+        `;
+        btn.addEventListener('click', () => {
+          triggerHaptic(10);
+          selectedZone = zone.id;
+          renderChips();
+          updateFilteredViews();
+          if (zone.zoom) {
+            scale = zone.zoom.scale;
+            translateX = zone.zoom.x;
+            translateY = zone.zoom.y;
+            applyTransform();
+          }
+        });
+        zoneChipsContainer.appendChild(btn);
+      });
+    }
+
+    function getFilteredItems() {
+      return INSTALLATIONS.filter(item => {
+        const matchesZone = selectedZone === 'all' || item.zoneId === selectedZone;
+        const q = searchQuery.trim().toLowerCase();
+        const matchesQuery = !q ||
+          item.title.toLowerCase().includes(q) ||
+          item.address.toLowerCase().includes(q) ||
+          item.num.includes(q);
+        return matchesZone && matchesQuery;
+      });
+    }
+
+    // Render Map Pins with 48dp invisible hit targets
+    function renderPins() {
+      pinsLayer.innerHTML = '';
+      const filteredIds = new Set(getFilteredItems().map(i => i.id));
+      const sorted = [...INSTALLATIONS].sort((a, b) => (a.id === activeItemId ? 1 : b.id === activeItemId ? -1 : 0));
+
+      sorted.forEach(item => {
+        const isMatch = filteredIds.has(item.id);
+        const isActive = item.id === activeItemId;
+        const isVisited = visitedIds.has(item.id);
+
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', `pin-group ${item.special ? 'highlight-special' : ''} ${isVisited ? 'visited' : ''} ${isActive ? 'active' : ''} ${!isMatch ? 'dimmed' : ''}`);
+        g.setAttribute('transform', `translate(${item.x}, ${item.y})`);
+
+        // Invisible larger touch circle for comfortable mobile tapping
+        const hit = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        hit.setAttribute('class', 'pin-hit-target');
+        hit.setAttribute('r', '20');
+
+        const halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        halo.setAttribute('class', 'pin-pulse');
+        halo.setAttribute('r', '14');
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('class', 'pin-circle');
+        circle.setAttribute('r', item.special ? '12.5' : '10.5');
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('class', 'pin-label');
+        text.textContent = item.num;
+
+        g.appendChild(hit);
+        g.appendChild(halo);
+        g.appendChild(circle);
+        g.appendChild(text);
+
+        g.addEventListener('click', (e) => {
+          e.stopPropagation();
+          triggerHaptic(14);
+          selectInstallation(item.id, true);
+        });
+
+        pinsLayer.appendChild(g);
+      });
+    }
+
+    // Render List Cards with Direct Visited Checkbox
+    function renderList() {
+      const items = getFilteredItems();
+      listView.innerHTML = '';
+
+      if (items.length === 0) {
+        listView.innerHTML = `<div style="text-align:center; padding: 48px 16px; color: var(--md-sys-color-on-surface-variant);">
+          Nav atrasts neviens objekts atbilstoši meklēšanas kritērijiem.
+        </div>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const isVisited = visitedIds.has(item.id);
+        const card = document.createElement('div');
+        card.className = `m3-card ${item.id === activeItemId ? 'selected-card' : ''}`;
+        card.innerHTML = `
+          <div class="card-badge ${isVisited ? 'visited' : item.special ? 'special' : ''}">#${item.num}</div>
+          <div class="card-content">
+            <div class="card-title">${item.title}</div>
+            <div class="card-address">${item.address}</div>
+            <div class="card-zone">${item.zoneName}</div>
+          </div>
+          <button class="card-check-btn ${isVisited ? 'checked' : ''}" aria-label="Atzīmēt kā apskatītu">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          </button>
+        `;
+
+        card.querySelector('.card-check-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleVisited(item.id);
+        });
+
+        card.addEventListener('click', () => {
+          triggerHaptic(10);
+          selectInstallation(item.id, true);
+        });
+
+        listView.appendChild(card);
+      });
+    }
+
+    function updateFilteredViews() {
+      renderPins();
+      renderList();
+    }
+
+    function selectInstallation(id, openSheet = true) {
+      activeItemId = id;
+      const item = INSTALLATIONS.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('sheetBadge').textContent = `#${item.num} • ${item.zoneName.split('.')[0]}. zona`;
+      document.getElementById('sheetTitle').textContent = item.title;
+      document.getElementById('sheetAddress').textContent = item.address;
+      document.getElementById('sheetZone').textContent = item.zoneName;
+      document.getElementById('sheetDesc').textContent = item.desc;
+
+      // Exact GPS coordinates + walking mode for Android Google Maps
+      document.getElementById('sheetMapsLink').href = `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}&travelmode=walking`;
+
+      syncSheetVisitedButton(id);
+      updateFilteredViews();
+      if (openSheet) {
+        detailSheet.classList.add('open');
+      }
+    }
+
+    document.getElementById('sheetVisitedBtn').addEventListener('click', () => {
+      toggleVisited(activeItemId);
+    });
+
+    document.getElementById('visitedCounterBtn').addEventListener('click', () => {
+      triggerHaptic(10);
+      showSnackbar(`Apskatīti ${visitedIds.size} no ${INSTALLATIONS.length} objektiem`);
+    });
+
+    document.getElementById('sheetNextBtn').addEventListener('click', () => {
+      triggerHaptic(10);
+      const visible = getFilteredItems();
+      const pool = visible.length > 0 ? visible : INSTALLATIONS;
+      const idx = pool.findIndex(i => i.id === activeItemId);
+      const nextItem = pool[(idx + 1) % pool.length];
+      selectInstallation(nextItem.id, true);
+    });
+
+    document.getElementById('sheetPrevBtn').addEventListener('click', () => {
+      triggerHaptic(10);
+      const visible = getFilteredItems();
+      const pool = visible.length > 0 ? visible : INSTALLATIONS;
+      const idx = pool.findIndex(i => i.id === activeItemId);
+      const prevItem = pool[(idx - 1 + pool.length) % pool.length];
+      selectInstallation(prevItem.id, true);
+    });
+
+    document.getElementById('closeSheetBtn').addEventListener('click', () => {
+      detailSheet.classList.remove('open');
+    });
+
+    // Swipe-down gesture on Bottom Sheet (Android native feel)
+    let sheetTouchStartY = 0;
+    let sheetCurrentDeltaY = 0;
+    const sheetDragZone = document.getElementById('sheetDragZone');
+
+    sheetDragZone.addEventListener('touchstart', (e) => {
+      sheetTouchStartY = e.touches[0].clientY;
+      detailSheet.classList.add('dragging-sheet');
+    }, { passive: true });
+
+    sheetDragZone.addEventListener('touchmove', (e) => {
+      sheetCurrentDeltaY = Math.max(0, e.touches[0].clientY - sheetTouchStartY);
+      detailSheet.style.transform = `translateY(${sheetCurrentDeltaY}px)`;
+    }, { passive: true });
+
+    sheetDragZone.addEventListener('touchend', () => {
+      detailSheet.classList.remove('dragging-sheet');
+      detailSheet.style.transform = '';
+      if (sheetCurrentDeltaY > 65) {
+        detailSheet.classList.remove('open');
+      }
+      sheetCurrentDeltaY = 0;
+    });
+
+    // Search Handling
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      clearSearchBtn.classList.toggle('visible', searchQuery.length > 0);
+      updateFilteredViews();
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchQuery = '';
+      searchInput.value = '';
+      clearSearchBtn.classList.remove('visible');
+      updateFilteredViews();
+    });
+
+    // Bottom Navigation Switching
+    document.querySelectorAll('.nav-destination').forEach(btn => {
+      btn.addEventListener('click', () => {
+        triggerHaptic(10);
+        document.querySelectorAll('.nav-destination').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        if (tab === 'map') {
+          mapView.style.display = 'block';
+          listView.classList.remove('active');
+        } else {
+          mapView.style.display = 'none';
+          listView.classList.add('active');
+        }
+      });
+    });
+
+    // Map Pan & Two-Finger Pinch-to-Zoom
+    function applyTransform() {
+      mapCanvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    }
+
+    document.getElementById('zoomInBtn').addEventListener('click', () => {
+      triggerHaptic(10);
+      scale = Math.min(3.0, scale + 0.4);
+      applyTransform();
+    });
+
+    document.getElementById('zoomOutBtn').addEventListener('click', () => {
+      triggerHaptic(10);
+      scale = Math.max(0.85, scale - 0.4);
+      if (scale <= 1) { translateX = 0; translateY = 0; }
+      applyTransform();
+    });
+
+    document.getElementById('resetViewBtn').addEventListener('click', () => {
+      triggerHaptic(10);
+      scale = 1;
+      translateX = 0;
+      translateY = 0;
+      applyTransform();
+    });
+
+    // Single-finger drag + Multi-touch Pinch-to-Zoom
+    mapView.addEventListener('touchstart', (e) => {
+      if (e.target.closest('.pin-group') || e.target.closest('.m3-fab-btn')) return;
+      if (e.touches.length === 2) {
+        isDragging = false;
+        initialPinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialPinchScale = scale;
+      } else if (e.touches.length === 1) {
+        isDragging = true;
+        mapCanvas.classList.add('dragging');
+        startX = e.touches[0].clientX - translateX;
+        startY = e.touches[0].clientY - translateY;
+      }
+    }, { passive: true });
+
+    mapView.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        scale = Math.min(3.2, Math.max(0.85, initialPinchScale * (dist / initialPinchDist)));
+        applyTransform();
+      } else if (isDragging && e.touches.length === 1) {
+        translateX = e.touches[0].clientX - startX;
+        translateY = e.touches[0].clientY - startY;
+        applyTransform();
+      }
+    }, { passive: true });
+
+    mapView.addEventListener('touchend', () => {
+      isDragging = false;
+      initialPinchDist = null;
+      mapCanvas.classList.remove('dragging');
+    });
+
+    // Mouse fallback for desktop preview
+    mapView.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.pin-group') || e.target.closest('.m3-fab-btn')) return;
+      isDragging = true;
+      mapCanvas.classList.add('dragging');
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      applyTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      mapCanvas.classList.remove('dragging');
+    });
+
+    // Tap empty map closes bottom sheet
+    document.getElementById('rigaMap').addEventListener('click', () => {
+      detailSheet.classList.remove('open');
+    });
+
+    // Init
+    updateVisitedCounter();
+    renderChips();
+    selectInstallation(19, true);
+  </script>
+</body>
+</html>
